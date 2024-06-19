@@ -5,7 +5,7 @@ import seaborn as sns
 from matplotlib.colors import LinearSegmentedColormap, rgb2hex
 
 
-def plot_corr(x, y, x_label, y_label, title, save_path=None, hue_control=None, hue_label=None):
+def plot_corr(x, y, x_label, y_label, title, save_path=None, hue_control=None, hue_label=None, y_0=False):
     runs = [f"Run {i + 1}" for i in range(len(x))]
 
     # Combine the data into a single DataFrame
@@ -83,10 +83,13 @@ def plot_corr(x, y, x_label, y_label, title, save_path=None, hue_control=None, h
     sns.set(style="white")
 
     plt.figure(figsize=(12, 8))
-    scatter_plot = sns.scatterplot(x='x', y='y', hue='run', palette=custom_palette, data=df, s=100, legend=False)
+    scatter_plot = sns.scatterplot(x='x', y='y', hue='run', palette=custom_palette, data=df, s=50, legend=False)
 
     m, b = np.polyfit(df['x'], df['y'], 1)
     plt.plot(df['x'], m * df['x'] + b, color='#E74C3C', linewidth=2, label='Global Trend Line')
+
+    if y_0:
+        plt.axhline(y=0, color='gray', linestyle='--', linewidth=1)
 
     plt.xlabel(x_label, fontsize=12, color='#2C3E50')
     plt.ylabel(y_label, fontsize=12, color='#2C3E50')
