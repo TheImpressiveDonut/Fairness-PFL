@@ -1,5 +1,7 @@
 .idea
 linear_regression_experiements/data/datasets/hospital_discharge/Hospital_Inpatient_Discharges__SPARCS_De-Identified___2015_20240615.csv
+graphs.ipynb
+
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

@@ -5,7 +5,7 @@ import pandas as pd
 
 
 def get_penguins_dataset() -> Tuple[List[np.ndarray], List[np.ndarray], List[np.ndarray], List[np.ndarray]]:
-    penguins = pd.read_csv("data/penguins.csv")
+    penguins = pd.read_csv("data/datasets/penguins/penguins.csv")
     penguins.dropna(how="any", inplace=True)
     penguins = penguins.sample(frac=1, random_state=42).reset_index(drop=True)
 

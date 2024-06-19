@@ -35,6 +35,6 @@ def get_features(data_fn):
     return X, y
 
 def get_adult_dataset() -> Tuple[List[np.ndarray], List[np.ndarray], List[np.ndarray], List[np.ndarray]]:
-    X_train, y_train = get_features('data/adult.data')
-    X_test, y_test = get_features('data/adult_w.test')
+    X_train, y_train = get_features('data/datasets/adult/adult.data')
+    X_test, y_test = get_features('data/datasets/adult/adult_w.test')
     return X_train, X_test, y_train, y_test
