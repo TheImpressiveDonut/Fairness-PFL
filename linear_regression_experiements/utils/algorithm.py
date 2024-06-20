@@ -56,8 +56,7 @@ def get_fusion_betas(betas: np.ndarray, Ws: List[np.ndarray]) -> np.ndarray:
     return new_betas
 
 
-def get_fair_fusion_betas(betas: np.ndarray, Ws: List[np.ndarray], std_squared: np.ndarray,
-                          sizes: np.ndarray) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
+def get_fair_fusion_betas(betas: np.ndarray, Ws: List[np.ndarray], std_squared: np.ndarray) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
     new_betas = betas
     for W in Ws:
         new_betas = W.dot(new_betas)
@@ -67,13 +66,10 @@ def get_fair_fusion_betas(betas: np.ndarray, Ws: List[np.ndarray], std_squared: 
     C_vec -= C_vec.min()
     C_vec /= C_vec.max()
 
-    normalized_C = C_vec.copy()
-    C = (1 - C_vec) * std_squared / (2 * betas.shape[1] * sizes)
-    C /= C.sum()
-    C = np.var(betas, axis=0) * 10 * C[:, np.newaxis]
+    C = np.sqrt(C_vec)
     # 10 for adult, 2 betas for
-    noise = C * np.random.normal(loc=0, scale=1, size=betas.shape)
-    return new_betas + noise, normalized_C, C
+    noise = C * np.random.normal(loc=0, scale=np.sqrt(std_squared), size=betas.shape[0])
+    return new_betas + noise.reshape(new_betas.shape[0], 1), (contribution - contribution.min()) / (contribution.max() - contribution.min()), C
 
 
 def get_mse(Xs: List[np.ndarray], ys: List[np.ndarray], betas: np.ndarray) -> np.ndarray:
@@ -83,13 +79,13 @@ def get_mse(Xs: List[np.ndarray], ys: List[np.ndarray], betas: np.ndarray) -> np
     return mse
 
 
-def get_expected_fair_mse(betas_local: np.ndarray, Ws: List[np.ndarray], std_squared: np.ndarray, sizes: np.ndarray,
+def get_expected_fair_mse(betas_local: np.ndarray, Ws: List[np.ndarray], std_squared: np.ndarray,
                           Xs: List[np.ndarray], ys: List[np.ndarray], num_iter: int = 1000) -> Tuple[
     np.ndarray, np.ndarray]:
     e_mse = np.zeros((num_iter, betas_local.shape[0]))
 
     for idx in range(num_iter):
-        betas_fair_fusion, _, _ = get_fair_fusion_betas(betas_local, Ws, std_squared, sizes)
+        betas_fair_fusion, _, _ = get_fair_fusion_betas(betas_local, Ws, std_squared)
         e_mse[idx] = get_mse(Xs, ys, betas_fair_fusion)
 
     return np.mean(e_mse, axis=0), np.var(e_mse, axis=0)

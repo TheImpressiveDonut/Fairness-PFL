@@ -82,7 +82,7 @@ def plot_corr(x, y, x_label, y_label, title, save_path=None, hue_control=None, h
     df = pd.DataFrame(data)
     sns.set(style="white")
 
-    plt.figure(figsize=(12, 8))
+    plt.figure(figsize=(7, 4))
     scatter_plot = sns.scatterplot(x='x', y='y', hue='run', palette=custom_palette, data=df, s=50, legend=False)
 
     m, b = np.polyfit(df['x'], df['y'], 1)

@@ -1,3 +1,5 @@
+import os
+import pickle
 from typing import Tuple, List
 
 import numpy as np
@@ -45,38 +47,47 @@ def clean(df_h: pd.DataFrame) -> pd.DataFrame:
 
 
 def get_hospital_dataset() -> Tuple[List[np.ndarray], List[np.ndarray], List[np.ndarray], List[np.ndarray]]:
-    df = pd.read_csv(
-        'data/datasets/hospital_discharge/Hospital_Inpatient_Discharges__SPARCS_De-Identified___2015_20240615.csv',
-        delimiter=',', low_memory=False)
-    df = pre_process(df)
-    df_per_hospital = {}
+    if not os.path.exists('hospital_data'):
+        os.makedirs('hospital_data')
 
-    for name, val in df.groupby(["Health Service Area", "Facility Name"]):
-        val = clean(val)
-        if val.iloc[:, 0].count() > 500:
-            df_per_hospital[name] = val
-    keys = list(df_per_hospital.keys())
-    num_data = list(map(lambda x: x["Length of Stay"].count(), df_per_hospital.values()))
-    indices = np.argsort(num_data)
-    keys = [keys[idx] for idx in indices[::-1]]
-    N = 20
-    train_size = 0.8
+        df = pd.read_csv(
+            'data/datasets/hospital_discharge/Hospital_Inpatient_Discharges__SPARCS_De-Identified___2015_20240615.csv',
+            delimiter=',', low_memory=False)
+        df = pre_process(df)
+        df_per_hospital = {}
 
-    Xs_train = []
-    Xs_test = []
-    ys_train = []
-    ys_test = []
+        for name, val in df.groupby(["Health Service Area", "Facility Name"]):
+            val = clean(val)
+            if val.iloc[:, 0].count() > 500:
+                df_per_hospital[name] = val
+        keys = list(df_per_hospital.keys())
+        num_data = list(map(lambda x: x["Length of Stay"].count(), df_per_hospital.values()))
+        indices = np.argsort(num_data)
+        keys = [keys[idx] for idx in indices[::-1]]
+        N = len(keys)
+        train_size = 0.8
 
-    for idx in range(N):
-        data = df_per_hospital[keys[idx]]
-        data = data.sample(frac=1, random_state=42).reset_index(drop=True)
-        train_size_idx = int(train_size * len(data))
-        #print(keys[idx], train_size_idx)
-        y = data["Length of Stay"]
-        X = data.drop(["Length of Stay"], axis=1)
-        ys_train.append(y.iloc[:train_size_idx].to_numpy())
-        ys_test.append(y.iloc[train_size_idx:].to_numpy())
-        Xs_train.append(X.iloc[:train_size_idx, :].to_numpy())
-        Xs_test.append(X.iloc[train_size_idx:, :].to_numpy())
+        Xs_train = []
+        Xs_test = []
+        ys_train = []
+        ys_test = []
+
+        for idx in range(N):
+            data = df_per_hospital[keys[idx]]
+            data = data.sample(frac=1, random_state=42).reset_index(drop=True)
+            train_size_idx = int(train_size * len(data))
+            #print(keys[idx], train_size_idx)
+            y = data["Length of Stay"]
+            X = data.drop(["Length of Stay"], axis=1)
+            ys_train.append(y.iloc[:train_size_idx].to_numpy())
+            ys_test.append(y.iloc[train_size_idx:].to_numpy())
+            Xs_train.append(X.iloc[:train_size_idx, :].to_numpy())
+            Xs_test.append(X.iloc[train_size_idx:, :].to_numpy())
+
+        with open('hospital_data/hospital_data.pkl', 'wb') as f:
+            pickle.dump((Xs_train, Xs_test, ys_train, ys_test), f)
+
+    with open('hospital_data/hospital_data.pkl', 'rb') as f:
+        Xs_train, Xs_test, ys_train, ys_test = pickle.load(f)
 
     return Xs_train, Xs_test, ys_train, ys_test
